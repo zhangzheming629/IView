@@ -1,0 +1,75 @@
+<!-- TreeRender -->
+<template>
+  <span>
+    <span v-if="isEdit">
+      <input size="small" v-model="treeData.title" autofocus
+      @blur="nodeEditPass(treeRoot,treeNode,treeData)"/>
+    </span>
+     <template v-else>
+    <span>{{treeData.title}}</span>
+    <span v-show="!isEdit">
+      <Button type="info" size="small"  icon="md-add" @click="nodeAdd(treeData)">添加</Button>
+      <Button type="primary" size="small" icon="md-create" @click="nodeEdit(treeRoot,treeNode,treeData)">修改</Button>
+      <Button type="error" size="small" icon="md-close" @click="nodeDel(treeRoot,treeNode,treeData)">删除</Button>
+    </span>
+    </template>
+  </span>
+</template>
+
+<script>
+export default {
+  name: 'TreeRender',
+  components: {},
+  data () {
+    return {
+      isEdit: false
+    }
+  },
+  props: {
+    // 树的根节点
+    treeRoot: {
+      type: Array
+    },
+    // 当前节点
+    treeNode: {
+      type: Object
+    },
+    // 当前节点的数据
+    treeData: {
+      type: Object
+    }
+  },
+  computed: {},
+  methods: {
+    nodeAdd (d) {
+      this.$emit('nodeAdd', d)
+    },
+    nodeEdit (r, n, d) {
+      this.isEdit = true
+      d.isEdit = this.isEdit
+      d.title = this.treeData.title
+      this.$set(d, 'isEdit', d.isEdit)
+      this.$set(d, 'title', d.title)
+      this.$emit('nodeEdit', r, n, d)
+    },
+    nodeEditPass (r, n, d) { // 编辑完成
+      this.isEdit = false
+      d.isEdit = this.isEdit
+      d.title = this.treeData.title
+      this.$set(d, 'isEdit', d.isEdit)
+      this.$set(d, 'title', d.title)
+      this.$emit('nodeAfterEdit', r, n, d)
+    },
+    nodeDel (r, n, d) {
+      this.$emit('nodeDel', r, n, d)
+    }
+  },
+  watch: {},
+  created () {},
+  mounted () {}
+}
+</script>
+
+<style>
+
+</style>

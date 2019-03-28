@@ -23,7 +23,7 @@ export default {
   methods: {
     renderContent (h, {root, node, data}) {
       let that = this
-      return h(TreeRenderRender, {
+      return h(TreeRender, {
         props: {
           treeRoot: root,
           treeNode: node,

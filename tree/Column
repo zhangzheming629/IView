@@ -1,0 +1,154 @@
+<!-- Column -->
+<template>
+ <div>
+   <Card>
+           <Tree :data="treeData" :render="renderContent">
+           </Tree>
+  </Card>
+ </div>
+</template>
+
+<script>
+import TreeRender from './TreeRender'
+export default {
+  name: 'Column',
+  components: {},
+  data () {
+    return {
+      treeData: [],
+      // 树结构
+      treeList: null
+    }
+  },
+  props: {},
+  computed: {},
+  methods: {
+    renderContent (h, {root, node, data}) {
+      let that = this
+      return h(TreeRenderRender, {
+        props: {
+          treeRoot: root,
+          treeNode: node,
+          treeData: data
+        },
+        on: {
+          nodeAdd: (d) => that.handleAdd(d),
+          nodeEdit: (r, n, d) => that.handleEdit(r, n, d),
+          nodeDel: (r, n, d) => that.handleDelete(r, n, d),
+          nodeAfterEdit: (r, n, d) => that.handleAfterEdit(r, n, d)
+        }
+      })
+    },
+    initTreeList () {
+      // 你的接口要返回一个List
+      this.axios.request('GET', '你的接口').then(response => {
+        if (response.status === 200) {
+          this.treeList = response.data
+          this.getTree(this.treeList)
+          this.treeData = this.treeList
+        }
+      })
+    },
+    // 递归解析
+    getTree (parents) {
+      if (parents === undefined) {
+        return
+      }
+      parents.forEach(item => {
+        item.title = item.columnTitle
+        item.expand = true
+        item.children = item.childColumn
+        this.getTree(item.childColumn)
+      })
+    },
+    // 编辑后，input框失去焦点
+    handleAfterEdit (r, n, d) {
+      console.log('after')
+      console.log(d)
+      d.columnTitle = d.title
+      console.log(d.columnTitle)
+      let column = {}
+      column.columnTitle = d.columnTitle
+      column.id = d.id
+      column.columnParent = d.columnParent
+      column.childColumn = []
+      console.log(column)
+      this.saveOrUpdateColumn(column)
+    },
+    // 编辑中，input框得到焦点
+    handleEdit (r, n, d) {
+      d.columnTitle = d.title
+    },
+    // 新增方法
+    handleAdd (d) {
+      //  构建一个实体
+      let column = {}
+      const children = d.children || []
+      // 添加数据
+      children.push({
+        title: '新增节点',
+        expand: true,
+        parent: d.id,
+        isEdit: false,
+        children: []
+      })
+      column.columnTitle = d.children[0].title
+      column.columnParent = d.id
+      column.childColumn = []
+      this.saveOrUpdateColumn(column)
+    },
+    saveOrUpdateColumn (column) {
+      this.axios.request('POST', '你的接口', column).then((response) => {
+        let status = response.status
+        if (status === 200) {
+          // 完成增或者改操作后进行一次查询
+          this.initTreeList()
+        } else {
+        // 提示错误
+          let errorMsg = '[' + response.errorCode + ']:' + response.errorMsg
+          this.$Notice.error({
+            title: '错误',
+            desc: errorMsg,
+            duration: 5
+          })
+        }
+      })
+    },
+    handleDelete (r, n, d) {
+      const parentKey = r.find(el => el === n).parent
+      const parent = r.find(el => el.nodeKey === parentKey).node
+      const index = parent.children.indexOf(d)
+      parent.children.splice(index, 1)
+      let id = d.id
+      this.deleteColumn(id)
+    },
+     // 根据id查询
+    deleteColumn (id) {
+      this.axios.request('POST', '你的接口', {id}).then(response => {
+        let status = response.status
+        if (status === 200) {
+          // 删除成功后进行一次查询
+          this.initTreeList()
+        } else {
+        // 提示错误
+          let errorMsg = '[' + response.errorCode + ']:' + response.errorMsg
+          this.$Notice.error({
+            title: '错误',
+            desc: errorMsg,
+            duration: 5
+          })
+        }
+      })
+    }
+  },
+  watch: {},
+  created () {
+    this.initTreeList()
+  },
+  mounted () {}
+}
+</script>
+
+<style>
+
+</style>

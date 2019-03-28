@@ -1,10 +1,8 @@
 <!-- Column -->
 <template>
  <div>
-   <Card>
            <Tree :data="treeData" :render="renderContent">
            </Tree>
-  </Card>
  </div>
 </template>
 

@@ -1,0 +1,52 @@
+<!-- 递归 -->
+<template>
+   <div>
+     <Dropdown :transfer="false" class="side-drop" v-for="node in treeValue" :key="node.id" placement="right-start">
+        <a href="javascript:void(0)">
+            <span >{{treeTop}}</span>
+            <Icon type="ios-arrow-down"></Icon>
+        </a>
+       <DropdownMenu slot="list">
+          <ColumnDropTree :parent="treeValue" @childByValue="childByValue"></ColumnDropTree>
+        </DropdownMenu>
+     </Dropdown>
+   </div>
+
+</template>
+
+<script>
+import ColumnDropTree from './ColumnDropTree'
+export default {
+  name: 'ColumnTree',
+  components: {
+    ColumnDropTree
+  },
+  data () {
+    return {
+      parent: Array,
+      treeTop: '请选择栏目',
+      treeChange: ''
+    }
+  },
+  props: {
+    treeValue: Array | Object,
+  },
+  computed: {},
+  methods: {
+    childByValue (childValue) {
+      this.treeTop = childValue
+      this.$emit('checkByValue', this.treeTop)
+    }
+  },
+  watch: {
+  },
+  created () {
+  },
+  mounted () {
+  }
+}
+</script>
+
+<style>
+
+</style>

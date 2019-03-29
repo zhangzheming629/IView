@@ -1,8 +1,8 @@
-<!-- 递归 -->
 <template>
    <div>
      <Dropdown :transfer="false" class="side-drop" v-for="node in treeValue" :key="node.id" placement="right-start">
         <a href="javascript:void(0)">
+            // 未选中的值，如果有值选中，则改为选中的值
             <span >{{treeTop}}</span>
             <Icon type="ios-arrow-down"></Icon>
         </a>
@@ -24,8 +24,7 @@ export default {
   data () {
     return {
       parent: Array,
-      treeTop: '请选择栏目',
-      treeChange: ''
+      treeTop: '请选择',
     }
   },
   props: {
@@ -33,6 +32,7 @@ export default {
   },
   computed: {},
   methods: {
+      // 子组件向父组件上抛的一个事件，用来传递下拉框中选中的值
     childByValue (childValue) {
       this.treeTop = childValue
       this.$emit('checkByValue', this.treeTop)

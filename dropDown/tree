@@ -1,0 +1,60 @@
+<!-- 树节点的子节点 -->
+<template>
+    <div class="tree-view-item">
+      <div v-for="node in parent" :key="node.id">
+        <div v-if="node.childColumn && node.childColumn.length > 0">
+          <Dropdown :transfer="false" @on-click="handleClick" placement="right-start">
+            <DropdownItem :name="node.columnTitle">
+              {{node.columnTitle}}
+            </DropdownItem>
+            <DropdownMenu slot="list">
+              <ColumnDropTree  :parent="node.childColumn"></ColumnDropTree>
+            </DropdownMenu>
+          </Dropdown>
+        </div>
+        <div v-else>
+          <DropdownItem :name="node.columnTitle">
+            {{node.columnTitle}}
+          </DropdownItem>
+        </div>
+      </div>
+    </div>
+</template>
+
+<script>
+import ColumnDropTree from './ColumnDropTree'
+export default {
+  name: 'ColumnDropTree',
+  components: {
+    ColumnDropTree
+  },
+  data () {
+    return {
+      parentName: '',
+      childValue: ''
+    }
+  },
+  props: {
+    parent: Array
+  },
+  computed: {},
+  methods: {
+    handleClick (name) {
+      this.childValue = name
+      this.$emit('childByValue', this.childValue)
+    }
+  },
+  watch: {
+    parent (val) {
+      console.log(parent)
+    }
+  },
+  created () {
+  },
+  mounted () {}
+}
+</script>
+
+<style>
+
+</style>

@@ -1,0 +1,121 @@
+<template>
+     <div>
+       <Modal
+        v-model="visible"
+        title='编辑'
+         @on-visible-change="visibleChange"
+         :mask-closable="false">
+         <Form ref="form" :model="columnModal" :label-with="80">
+           <FormItem prop="columnTitle" label="栏目名称">
+             <Input v-model="columnModal.columnTitle"/>
+           </FormItem>
+         </Form>
+           <div slot="footer">
+          <Button @click="cancel" :disabled="requestLoading">取消</Button>
+          <Button type="primary" @click="submit" :loading="requestLoading">{{requestLoading ? '正在提交' : '提交'}}</Button>
+        </div>
+       </Modal>
+     </div>
+    </template>
+    
+    <script>
+    import {mapGetters} from 'vuex'
+    export default {
+      name: 'ColumnFormModal',
+      components: {},
+      data () {
+        return {
+          visible: false,
+          columnModal: {}
+        }
+      },
+      props: {
+        showModal: {
+          type: Boolean,
+          required: true
+        },
+        processObj: {
+          type: Object,
+          required: false
+        },
+        currentNodeKey: {
+          type: Number | Object,
+          required: true
+        },
+        currentColumnParent: {
+          type: Number | Object,
+          required: true
+        }
+      },
+      computed: {
+        ...mapGetters([
+          'requestLoading'
+        ])
+      },
+      methods: {
+        // 响应显示与否
+        visibleChange (status) {
+          // 显示时初始化动作
+          if (status) {
+    
+          } else {
+            // 关闭时抛出事件
+            this.$emit('modal-visible-change', false)
+          }
+        },
+        // 提交
+        submit () {
+          this.$refs['form'].validate((valid) => {
+            if (valid) {
+              this.columnModal.columnParent = this.currentColumnParent
+              this.columnModal.nodeKey = this.currentNodeKey
+              console.log(this.columnModal)
+              this.axios.request('POST', 'message/column/saveOrUpdateColumn', this.columnModal).then((response) => {
+                let status = response.status
+                if (status === 200) {
+                  this.$Notice.success({
+                    title: '栏目编辑' + '成功',
+                    duration: 3
+                  })
+                  this.$emit('on-oper-success', this.columnModal)
+                } else {
+                  // 提示错误
+                  let errorMsg = '[' + response.errorCode + ']:' + response.errorMsg
+                  this.$Notice.error({
+                    title: '栏目编辑' + '失败',
+                    desc: errorMsg,
+                    duration: 5
+                  })
+                }
+              }).finally(() => {
+                this.visible = false
+              })
+            }
+          })
+        },
+        cancel () {
+          this.visible = false
+          // 清空校验信息
+          this.$refs['form'].resetFields()
+          // 关闭时抛出事件
+          this.$emit('modal-visible-change', false)
+        }
+      },
+      watch: {
+        showModal (val) {
+          this.visible = val
+          this.columnModal = Object.assign({}, this.treeObj)
+        },
+        visible (val) {
+          this.$emit('modal-visible-change', val)
+        }
+      },
+      created () {},
+      mounted () {}
+    }
+    </script>
+    
+    <style>
+    
+    </style>
+

@@ -1,0 +1,176 @@
+<template>
+      <Card ref="cardTable">
+          <Button type="info" size="small"  icon="md-add" @click="handleAdd(currentNode,currentRoot)">添加</Button>
+          <Button type="primary" size="small" icon="md-create" @click="handleEdit(currentNode,currentRoot)">修改</Button>
+          <Button type="error" size="small" icon="md-close" @click="handleDelete(currentNode,currentRoot)">删除</Button>
+          <tree :data="treeData"  @on-select-change="handleSelectChange" ref="tree">
+          </tree>
+          <ColumnFormModal
+          :currentColumnParent="currentColumnParent"
+          :currentNodeKey="currentNodeKey"
+          :showModal="showModal"
+          :treeObj="treeObj"
+          @modal-visible-change="modalVisibleChange"
+          ></ColumnFormModal>
+      </Card>
+    </template>
+    
+    <script>
+    import ColumnFormModal from './ColumnFormModal'
+    export default {
+      name: 'Column',
+      components: {
+        ColumnFormModal
+      },
+      data () {
+        return {
+          // 用来给tree的data属性赋值
+          treeData: [],
+          // 用来接收后台传来的树List
+          treeList: null,
+          // 编辑模态框
+          showModal: false,
+          // 选中的当前node
+          currentNode: {},
+          // 选中的树的根节点
+          currentRoot: {},
+          // 树对象
+          treeObj: {},
+          // 当前选中节点的nodeKey
+          currentNodeKey: 0,
+          // 当前选中节点的父节点的nodeKey
+          currentColumnParent: 0
+        }
+      },
+      props: {},
+      computed: {},
+      methods: {
+        // 响应弹窗的变化
+        modalVisibleChange (visible) {
+          this.showModal = visible
+          // 递归查询树结构
+          this.initTreeList()
+        },
+        // 选中树节点触发的方法
+        handleSelectChange (root, node) {
+          this.currentNode = node
+          this.currentRoot = root
+        },
+        // 新增按钮触发的方法
+        handleAdd (currentNode) {
+          console.log(currentNode)
+          // 声明一个数组
+          let treeNode = currentNode.children ? currentNode.children : []
+          // console.log(treeNode)
+          // 声明一个对象
+          let column = {}
+          // 新增节点，新增的节点的名字是 ‘新增节点’
+          // 修改名字需要点击修改按钮
+          treeNode.push({
+            title: '新增节点',
+            parent: currentNode.id,
+            expend: true,
+            isEdit: false,
+            children: []
+          })
+          column.columnTitle = treeNode[treeNode.length - 1].title
+          column.columnParent = treeNode[treeNode.length - 1].parent
+          column.childColumn = []
+          column.nodeKey = currentNode.nodeKey
+          console.log(column)
+          this.saveOrUpdateColumn(column)
+        },
+        // 编辑按钮触发的方法
+        handleEdit (currentNode, currentRoot) {
+          this.showModal = true
+          this.treeObj = Object.assign({}, currentNode)
+          console.log(currentNode)
+          this.currentColumnParent = currentNode.columnParent
+          this.currentNodeKey = currentNode.nodeKey
+          console.log(this.currentColumnParent)
+          console.log(this.currentNodeKey)
+        },
+        // 删除按钮触发的方法
+        handleDelete (currentNode, currentRoot) {
+          let id = currentNode.id
+          this.deleteColumn(id)
+          this.initTreeList()
+        },
+        // 查询树结构
+        initTreeList () {
+          this.axios.request('GET', '接口').then(response => {
+            if (response.status === 200) {
+              this.treeList = response.data
+              this.getTree(this.treeList)
+              this.treeData = this.treeList
+            }
+          })
+        },
+        // 递归解析树结构
+        getTree (parents) {
+          if (parents === undefined) {
+            return
+          }
+          parents.forEach(item => {
+            item.title = item.columnTitle
+            item.children = item.childColumn
+            this.getTree(item.childColumn)
+          })
+        },
+        // 调用后台新增或者编辑的接口
+        // 参数是实体
+        saveOrUpdateColumn (column) {
+          this.axios.request('POST', '接口', column).then((response) => {
+            let status = response.status
+            if (status === 200) {
+              this.initTreeList()
+            } else {
+            // 提示错误
+              let errorMsg = '[' + response.errorCode + ']:' + response.errorMsg
+              this.$Notice.error({
+                title: '错误',
+                desc: errorMsg,
+                duration: 5
+              })
+            }
+          })
+        },
+        // 调用后台删除的接口
+        // 根据id删除
+        deleteColumn (id) {
+          this.axios.request('POST', '接口', {id}).then(response => {
+            let status = response.status
+            if (status === 200) {
+              this.initTreeList()
+            } else {
+            // 提示错误
+              let errorMsg = '[' + response.errorCode + ']:' + response.errorMsg
+              this.$Notice.error({
+                title: '错误',
+                desc: errorMsg,
+                duration: 5
+              })
+            }
+          })
+        }
+      },
+      watch: {
+        showModal (val) {
+          this.visible = val
+        },
+        visible (val) {
+          this.$emit('modal-visible-change', val)
+        }
+      },
+      created () {
+         // 查询树
+        this.initTreeList()
+      },
+      mounted () {
+      }
+    }
+    </script>
+    
+    <style>
+    
+    </style>
